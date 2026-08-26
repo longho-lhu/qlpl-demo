@@ -8,7 +8,7 @@ interface RegisterBody {
   password?: string;
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Method not allowed" });
@@ -25,24 +25,24 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const db = getDb();
-  const existing = db
+  const existing = (await db
     .prepare("SELECT id FROM users WHERE username = ?")
-    .get(trimmedUsername) as Pick<UserRow, "id"> | undefined;
+    .get(trimmedUsername)) as Pick<UserRow, "id"> | undefined;
 
   if (existing) {
     return res.status(409).json({ message: "Tên đăng nhập đã tồn tại" });
   }
 
   const passwordHash = hashPassword(password);
-  const totalUsers = db.prepare("SELECT COUNT(*) AS total FROM users").get() as { total: number };
+  const totalUsers = (await db.prepare("SELECT COUNT(*) AS total FROM users").get()) as { total: number };
   const isAdmin = totalUsers.total === 0 ? 1 : 0;
 
-  const result = db
+  const result = await db
     .prepare("INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)")
     .run(trimmedUsername, passwordHash, isAdmin);
 
   return res.status(201).json({
-    id: Number(result.lastInsertRowid),
+    id: Number(result.lastInsertRowid ?? 0),
     username: trimmedUsername,
     is_admin: isAdmin,
   });

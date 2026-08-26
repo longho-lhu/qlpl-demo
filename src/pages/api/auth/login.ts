@@ -14,7 +14,7 @@ interface LoginBody {
   password?: string;
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Method not allowed" });
@@ -26,9 +26,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const db = getDb();
-  const user = db
+  const user = (await db
     .prepare("SELECT * FROM users WHERE username = ?")
-    .get(username.trim()) as UserRow | undefined;
+    .get(username.trim())) as unknown as UserRow | undefined;
 
   if (!user || !verifyPassword(password, user.password_hash)) {
     return res.status(401).json({ message: "Tên đăng nhập hoặc mật khẩu không đúng" });

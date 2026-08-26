@@ -9,23 +9,23 @@ interface ComputerBody {
   status?: "available" | "in_use" | "maintenance";
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const auth = getAuthFromRequest(req);
   if (!auth) {
     return res.status(401).json({ message: "Vui lòng đăng nhập" });
   }
 
   const db = getDb();
-  const user = db
+  const user = (await db
     .prepare("SELECT is_admin FROM users WHERE id = ?")
-    .get(auth.sub) as { is_admin: number } | undefined;
+    .get(auth.sub)) as { is_admin: number } | undefined;
 
   if (!user) {
     return res.status(404).json({ message: "Không tìm thấy người dùng" });
   }
 
   if (req.method === "GET") {
-    const computers = db.prepare("SELECT * FROM computers ORDER BY id DESC").all();
+    const computers = await db.prepare("SELECT * FROM computers ORDER BY id DESC").all();
     return res.status(200).json({ computers });
   }
 
@@ -43,24 +43,24 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const normalizedName = trimmedName.toLowerCase();
-    const duplicate = db
+    const duplicate = (await db
       .prepare("SELECT id FROM computers WHERE LOWER(TRIM(name)) = ?")
-      .get(normalizedName) as { id: number } | undefined;
+      .get(normalizedName)) as { id: number } | undefined;
 
     if (duplicate) {
       return res.status(409).json({ message: "Tên máy đã tồn tại, vui lòng chọn tên khác" });
     }
 
     const validStatus = status === "in_use" || status === "maintenance" ? status : "available";
-    const result = db
+    const result = await db
       .prepare(
         "INSERT INTO computers (name, room, specs, status) VALUES (?, ?, ?, ?)",
       )
       .run(trimmedName, trimmedRoom, specs?.trim() || null, validStatus);
 
-    const computer = db
+    const computer = (await db
       .prepare("SELECT * FROM computers WHERE id = ?")
-      .get(Number(result.lastInsertRowid)) as Record<string, unknown> | undefined;
+      .get(Number(result.lastInsertRowid ?? 0))) as Record<string, unknown> | undefined;
 
     return res.status(201).json({ computer });
   }

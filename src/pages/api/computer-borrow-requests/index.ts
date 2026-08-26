@@ -7,16 +7,16 @@ interface BorrowRequestBody {
   reason?: string;
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const auth = getAuthFromRequest(req);
   if (!auth) {
     return res.status(401).json({ message: "Vui lòng đăng nhập" });
   }
 
   const db = getDb();
-  const user = db
+  const user = (await db
     .prepare("SELECT is_admin FROM users WHERE id = ?")
-    .get(auth.sub) as { is_admin: number } | undefined;
+    .get(auth.sub)) as { is_admin: number } | undefined;
 
   if (!user) {
     return res.status(404).json({ message: "Không tìm thấy người dùng" });
@@ -24,7 +24,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === "GET") {
     const rows = user.is_admin
-      ? db
+      ? await db
           .prepare(`
             SELECT r.*, u.username AS borrower_username, u.full_name AS borrower_full_name,
                    c.name AS computer_name, c.room AS computer_room, c.status AS computer_status
@@ -34,7 +34,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             ORDER BY r.requested_at DESC
           `)
           .all()
-      : db
+      : await db
           .prepare(`
             SELECT r.*, u.username AS borrower_username, u.full_name AS borrower_full_name,
                    c.name AS computer_name, c.room AS computer_room, c.status AS computer_status
@@ -56,17 +56,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ message: "Máy không hợp lệ" });
     }
 
-    const computer = db
+    const computer = (await db
       .prepare("SELECT * FROM computers WHERE id = ?")
-      .get(computerId) as { id: number; status: string } | undefined;
+      .get(computerId)) as { id: number; status: string } | undefined;
 
     if (!computer) {
       return res.status(404).json({ message: "Không tìm thấy máy tính" });
     }
 
-    const pendingRequest = db
+    const pendingRequest = (await db
       .prepare("SELECT id FROM computer_borrow_requests WHERE computer_id = ? AND status = 'pending'")
-      .get(computerId) as { id: number } | undefined;
+      .get(computerId)) as { id: number } | undefined;
 
     if (pendingRequest) {
       return res.status(409).json({ message: "Máy này đang có yêu cầu chờ duyệt" });
@@ -77,7 +77,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const trimmedReason = reason?.trim();
-    db.prepare(
+    await db.prepare(
       "INSERT INTO computer_borrow_requests (computer_id, borrower_id, reason, status) VALUES (?, ?, ?, 'pending')",
     ).run(computerId, auth.sub, trimmedReason || null);
 

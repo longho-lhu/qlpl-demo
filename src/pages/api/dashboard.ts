@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getAuthFromRequest } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ message: "Method not allowed" });
@@ -15,13 +15,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const db = getDb();
 
-  const userCount = db.prepare("SELECT COUNT(*) AS total FROM users").get() as { total: number };
-  const totalComputers = db.prepare("SELECT COUNT(*) AS total FROM computers").get() as { total: number };
-  const availableComputers = db.prepare("SELECT COUNT(*) AS total FROM computers WHERE status = 'available'").get() as { total: number };
-  const inUseComputers = db.prepare("SELECT COUNT(*) AS total FROM computers WHERE status = 'in_use'").get() as { total: number };
-  const maintenanceComputers = db.prepare("SELECT COUNT(*) AS total FROM computers WHERE status = 'maintenance'").get() as { total: number };
+  const userCount = (await db.prepare("SELECT COUNT(*) AS total FROM users").get()) as { total: number };
+  const totalComputers = (await db.prepare("SELECT COUNT(*) AS total FROM computers").get()) as { total: number };
+  const availableComputers = (await db.prepare("SELECT COUNT(*) AS total FROM computers WHERE status = 'available'").get()) as { total: number };
+  const inUseComputers = (await db.prepare("SELECT COUNT(*) AS total FROM computers WHERE status = 'in_use'").get()) as { total: number };
+  const maintenanceComputers = (await db.prepare("SELECT COUNT(*) AS total FROM computers WHERE status = 'maintenance'").get()) as { total: number };
 
-  const usageRows = db
+  const usageRows = (await db
     .prepare(`
       SELECT c.id, c.name, c.room,
              COALESCE(SUM((strftime('%s', r.returned_at) - strftime('%s', r.approved_at))) / 3600.0, 0) AS hours
@@ -31,7 +31,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       GROUP BY c.id, c.name, c.room
       ORDER BY hours DESC
     `)
-    .all() as Array<{ id: number; name: string; room: string; hours: number | string }>;
+    .all()) as Array<{ id: number; name: string; room: string; hours: number | string }>;
 
   const totalUsageHours = usageRows.reduce((sum, item) => sum + Number(item.hours || 0), 0);
 

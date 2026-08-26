@@ -8,7 +8,7 @@ interface ChangePasswordBody {
   new_password?: string;
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {
     res.setHeader("Allow", "PUT");
     return res.status(405).json({ message: "Method not allowed" });
@@ -25,7 +25,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const db = getDb();
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(auth.sub) as
+  const user = (await db.prepare("SELECT * FROM users WHERE id = ?").get(auth.sub)) as unknown as
     | UserRow
     | undefined;
 
@@ -33,7 +33,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(401).json({ message: "Mật khẩu hiện tại không đúng" });
   }
 
-  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
+  await db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
     hashPassword(new_password),
     auth.sub,
   );

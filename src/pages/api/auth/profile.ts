@@ -13,7 +13,7 @@ interface ProfileBody {
   avatar_url?: string;
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {
     res.setHeader("Allow", "PUT");
     return res.status(405).json({ message: "Method not allowed" });
@@ -28,7 +28,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     req.body as ProfileBody;
 
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `UPDATE users
      SET full_name = ?, mssv = ?, class = ?, gender = ?, phone = ?, email = ?, avatar_url = ?, profile_completed = 1
      WHERE id = ?`,
@@ -43,6 +43,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     auth.sub,
   );
 
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(auth.sub) as UserRow;
+  const user = (await db.prepare("SELECT * FROM users WHERE id = ?").get(auth.sub)) as unknown as UserRow;
   return res.status(200).json({ user: toPublicUser(user) });
 }

@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { getAuthFromRequest, toPublicUser } from "@/lib/auth";
 import type { UserRow } from "@/types/user";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ message: "Method not allowed" });
@@ -15,7 +15,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const db = getDb();
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(auth.sub) as
+  const user = (await db.prepare("SELECT * FROM users WHERE id = ?").get(auth.sub)) as unknown as
     | UserRow
     | undefined;
 
