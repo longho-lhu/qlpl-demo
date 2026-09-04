@@ -37,15 +37,21 @@ export default function ComputerApprovalPanel({ requests, isAdmin, onAction }: C
   if (!isAdmin) return null;
 
   return (
-    <div className="ios-soft-card p-5">
-      <h2 className="mb-4 text-lg font-semibold text-slate-900">Yêu cầu mượn máy</h2>
+    <div className="glass-panel rounded-[30px] p-5 sm:p-6">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Approval</p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">Yêu cầu mượn máy</h2>
+        </div>
+      </div>
+
       {requests.length === 0 ? (
-        <p className="text-sm text-slate-500">Chưa có yêu cầu nào.</p>
+        <p className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-4 text-sm text-slate-500">Chưa có yêu cầu nào.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-white/60 text-slate-600">
+              <tr className="border-b border-slate-200 text-slate-600">
                 <th className="px-3 py-2 font-medium">Máy</th>
                 <th className="px-3 py-2 font-medium">Người yêu cầu</th>
                 <th className="px-3 py-2 font-medium">Lý do</th>
@@ -55,17 +61,17 @@ export default function ComputerApprovalPanel({ requests, isAdmin, onAction }: C
             </thead>
             <tbody>
               {requests.map((request) => (
-                <tr key={request.id} className="border-b border-white/50 align-top">
-                  <td className="px-3 py-2">
+                <tr key={request.id} className="border-b border-slate-200 align-top">
+                  <td className="px-3 py-3">
                     <p className="font-medium text-slate-900">{request.computer?.name ?? "-"}</p>
                     <p className="text-xs text-slate-500">{request.computer?.room ?? "-"}</p>
                   </td>
-                  <td className="px-3 py-2 text-slate-700">
+                  <td className="px-3 py-3 text-slate-700">
                     <p className="font-medium">{request.borrower?.full_name || request.borrower?.username || "-"}</p>
                     <p className="text-xs text-slate-500">{request.borrower?.username || "-"}</p>
                   </td>
-                  <td className="px-3 py-2 text-slate-700">{request.reason || "Không có lý do"}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-3 text-slate-700">{request.reason || "Không có lý do"}</td>
+                  <td className="px-3 py-3">
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                         request.status === "pending"
@@ -86,7 +92,7 @@ export default function ComputerApprovalPanel({ requests, isAdmin, onAction }: C
                             : "Đã trả"}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-3">
                     {request.status === "pending" && (
                       <div className="flex flex-wrap gap-2">
                         <button

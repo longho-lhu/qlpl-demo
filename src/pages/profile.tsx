@@ -141,75 +141,94 @@ export default function Profile() {
 
   return (
     <MainLayout>
-      <div className="mx-auto w-full max-w-2xl ios-soft-card p-8">
-        <h1 className="mb-6 text-xl font-semibold text-slate-900">Hồ sơ cá nhân</h1>
-        {loaded && (
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-200 bg-white/60 p-4 shadow-sm">
-              <h2 className="mb-3 text-base font-semibold text-slate-800">Ảnh đại diện</h2>
-
-              <div className="mb-4 flex items-center gap-4">
-                {avatarPreview ? (
-                  <img src={avatarPreview} alt="Avatar preview" className="h-20 w-20 rounded-full object-cover ring-2 ring-slate-200" />
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-sm text-slate-500">No image</div>
-                )}
-              </div>
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleAvatarSelect(e.target.files?.[0] ?? null)}
-                className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-full file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-blue-500"
-              />
-
-              <div className="mt-4 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleAvatarSave}
-                  disabled={!avatarFile || avatarSaving}
-                  className="ios-button-primary px-5 py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {avatarSaving ? "Đang lưu ảnh..." : "Lưu ảnh đại diện"}
-                </button>
-                {avatarSuccess && <p className="text-sm text-green-600">{avatarSuccess}</p>}
-              </div>
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="glass-panel rounded-[30px] p-5 sm:p-6 lg:p-8">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Account</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Hồ sơ cá nhân</h1>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Field label="Họ và tên" value={form.full_name} onChange={(v) => updateField("full_name", v)} required />
-              <Field label="MSSV" value={form.mssv} onChange={(v) => updateField("mssv", v)} required />
-              <Field label="Lớp" value={form.class} onChange={(v) => updateField("class", v)} required />
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Giới tính</label>
-                <select
-                  className="w-full rounded-2xl border border-white/80 bg-white/60 px-3 py-2.5 text-sm text-slate-700 shadow-inner outline-none transition focus:border-blue-300 focus:bg-white/80"
-                  value={form.gender}
-                  onChange={(e) => updateField("gender", e.target.value)}
-                  required
-                >
-                  <option value="">-- Chọn giới tính --</option>
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
-                  <option value="Khác">Khác</option>
-                </select>
-              </div>
-              <Field label="Số điện thoại" value={form.phone} onChange={(v) => updateField("phone", v)} required />
-              <Field label="Email" type="email" value={form.email} onChange={(v) => updateField("email", v)} required />
-
-              {error && <p className="text-sm text-red-600">{error}</p>}
-              {success && <p className="text-sm text-green-600">{success}</p>}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="ios-button-primary w-full px-6 py-2.5 text-sm font-medium sm:w-auto"
-              >
-                {loading ? "Đang lưu..." : "Lưu thay đổi hồ sơ"}
-              </button>
-            </form>
+            <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+              Active
+            </div>
           </div>
-        )}
+
+          {loaded && (
+            <div className="grid gap-6 xl:grid-cols-[0.9fr_1.5fr]">
+              <aside className="rounded-[28px] border border-slate-200/80 bg-white/70 p-5 shadow-sm">
+                <h2 className="mb-4 text-base font-semibold text-slate-800">Ảnh đại diện</h2>
+
+                <div className="mb-4 flex items-center justify-center">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar preview" className="h-28 w-28 rounded-full object-cover ring-4 ring-blue-100 shadow-sm" />
+                  ) : (
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-100 text-sm font-medium text-slate-500">
+                      No image
+                    </div>
+                  )}
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleAvatarSelect(e.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-full file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-blue-500"
+                />
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={handleAvatarSave}
+                    disabled={!avatarFile || avatarSaving}
+                    className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_20px_rgba(79,110,247,0.25)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {avatarSaving ? "Đang lưu ảnh..." : "Lưu ảnh đại diện"}
+                  </button>
+                  {avatarSuccess && <p className="mt-3 text-sm text-green-600">{avatarSuccess}</p>}
+                </div>
+              </aside>
+
+              <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-slate-200/80 bg-white/70 p-5 shadow-sm">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Họ và tên" value={form.full_name} onChange={(v) => updateField("full_name", v)} required />
+                  <Field label="MSSV" value={form.mssv} onChange={(v) => updateField("mssv", v)} required />
+                  <Field label="Lớp" value={form.class} onChange={(v) => updateField("class", v)} required />
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Giới tính</label>
+                    <select
+                      className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm text-slate-700 shadow-inner outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                      value={form.gender}
+                      onChange={(e) => updateField("gender", e.target.value)}
+                      required
+                    >
+                      <option value="">-- Chọn giới tính --</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                      <option value="Khác">Khác</option>
+                    </select>
+                  </div>
+
+                  <Field label="Số điện thoại" value={form.phone} onChange={(v) => updateField("phone", v)} required />
+                  <Field label="Email" type="email" value={form.email} onChange={(v) => updateField("email", v)} required />
+                </div>
+
+                {error && <p className="text-sm text-red-600">{error}</p>}
+                {success && <p className="text-sm text-green-600">{success}</p>}
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(15,23,42,0.18)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? "Đang lưu..." : "Lưu thay đổi hồ sơ"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
     </MainLayout>
   );

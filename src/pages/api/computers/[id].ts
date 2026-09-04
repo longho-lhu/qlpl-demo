@@ -20,8 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .prepare("SELECT is_admin FROM users WHERE id = ?")
     .get(auth.sub)) as { is_admin: number } | undefined;
 
-  if (!user || !user.is_admin) {
-    return res.status(403).json({ message: "Chỉ quản trị viên mới được quản lý máy tính" });
+  if (!user) {
+    return res.status(404).json({ message: "Không tìm thấy người dùng" });
   }
 
   const id = Number(req.query.id);
@@ -32,6 +32,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const existing = (await db.prepare("SELECT * FROM computers WHERE id = ?").get(id)) as Record<string, unknown> | undefined;
   if (!existing) {
     return res.status(404).json({ message: "Không tìm thấy máy tính" });
+  }
+
+  if (req.method === "GET") {
+    return res.status(200).json({ computer: existing });
+  }
+
+  if (!user.is_admin) {
+    return res.status(403).json({ message: "Chỉ quản trị viên mới được quản lý máy tính" });
   }
 
   if (req.method === "PUT") {
@@ -62,6 +70,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ message: "Xoá máy tính thành công" });
   }
 
-  res.setHeader("Allow", "PUT, DELETE");
+  res.setHeader("Allow", "GET, PUT, DELETE");
   return res.status(405).json({ message: "Method not allowed" });
 }

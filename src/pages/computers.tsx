@@ -32,8 +32,10 @@ export default function ComputersPage() {
     void loadData();
   }, []);
 
-  async function loadData() {
-    setLoading(true);
+  async function loadData(showLoadingState = true) {
+    if (showLoadingState) {
+      setLoading(true);
+    }
     try {
       const [meResponse, computerResponse, requestResponse] = await Promise.all([
         api.get("/auth/me").catch(() => null),
@@ -61,7 +63,9 @@ export default function ComputersPage() {
         content: getErrorMessage(err),
       });
     } finally {
-      setLoading(false);
+      if (showLoadingState) {
+        setLoading(false);
+      }
     }
   }
 
@@ -96,7 +100,7 @@ export default function ComputersPage() {
       setForm(emptyComputerForm);
       setEditingId(null);
       setModalOpen(false);
-      await loadData();
+      await loadData(false);
     } catch (err) {
       showNotification({
         type: "error",
@@ -119,7 +123,7 @@ export default function ComputersPage() {
         title: "Thành công",
         content: "Xoá máy tính thành công",
       });
-      await loadData();
+      await loadData(false);
     } catch (err) {
       showNotification({
         type: "error",
@@ -160,7 +164,7 @@ export default function ComputersPage() {
         title: "Đã gửi yêu cầu",
         content: "Yêu cầu mượn máy đã được gửi và đang chờ duyệt",
       });
-      await loadData();
+      await loadData(false);
     } catch (err) {
       showNotification({
         type: "error",
@@ -194,7 +198,7 @@ export default function ComputersPage() {
               ? "Đã từ chối yêu cầu"
               : "Máy đã được trả về và trạng thái cập nhật",
       });
-      await loadData();
+      await loadData(false);
     } catch (err) {
       showNotification({
         type: "error",
@@ -206,15 +210,24 @@ export default function ComputersPage() {
 
   const isAdmin = Boolean(user?.is_admin);
 
+  const stats = [
+    { label: "Máy có sẵn", value: computers.filter((computer) => computer.status === "available").length, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "Đang sử dụng", value: computers.filter((computer) => computer.status === "in_use").length, tone: "bg-amber-50 text-amber-700" },
+    { label: "Bảo trì", value: computers.filter((computer) => computer.status === "maintenance").length, tone: "bg-rose-50 text-rose-700" },
+    { label: "Yêu cầu chờ", value: requests.filter((request) => request.status === "pending").length, tone: "bg-blue-50 text-blue-700" },
+  ];
+
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
+        <section className="glass-panel rounded-[30px] p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Quản lý máy tính</h1>
-              <p className="text-sm text-gray-500">Theo dõi phòng máy, trạng thái đang sử dụng và duyệt yêu cầu mượn.</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Operations</p>
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Quản lý máy tính</h1>
+              <p className="mt-2 text-sm text-slate-600">Theo dõi phòng máy, trạng thái hoạt động và xử lý yêu cầu mượn trong thời gian thực.</p>
             </div>
+
             {isAdmin && (
               <button
                 type="button"
@@ -223,20 +236,36 @@ export default function ComputersPage() {
                   setForm(emptyComputerForm);
                   setModalOpen(true);
                 }}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-2xl font-semibold text-gray-900 shadow-sm transition hover:brightness-95"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(79,110,247,0.28)] transition hover:translate-y-[-1px]"
                 aria-label="Thêm máy tính mới"
                 title="Thêm máy tính mới"
               >
-                +
+                <span className="text-xl leading-none">+</span>
+                Thêm máy
               </button>
             )}
           </div>
 
-        </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-sm">
+                <div className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${stat.tone}`}>
+                  {stat.label}
+                </div>
+                <div className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">{stat.value}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Danh sách máy trong phòng</h2>
+        <div className="grid gap-6 xl:grid-cols-[1.45fr_0.9fr]">
+          <section className="glass-panel rounded-[30px] p-5 sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-slate-900">Danh sách máy trong phòng</h2>
+                <p className="text-sm text-slate-500">Tổng quan trạng thái từng thiết bị</p>
+              </div>
+            </div>
             <ComputerList
               computers={computers}
               isAdmin={isAdmin}
@@ -255,7 +284,7 @@ export default function ComputersPage() {
               }}
               onDelete={(id) => void handleDeleteComputer(id)}
             />
-          </div>
+          </section>
 
           <ComputerBorrowForm
             user={user}
