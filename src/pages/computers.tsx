@@ -6,7 +6,7 @@ import ComputerBorrowForm from "@/components/computers/ComputerBorrowForm";
 import ComputerFormModal from "@/components/computers/ComputerFormModal";
 import ComputerList, { type Computer } from "@/components/computers/ComputerList";
 import showNotification from "@/components/common/Notification";
-import type { PublicUser } from "@/types/user";
+import { useAppSelector } from "@/store/hooks";
 
 type ComputerStatus = "available" | "in_use" | "maintenance";
 
@@ -18,7 +18,7 @@ const emptyComputerForm = {
 };
 
 export default function ComputersPage() {
-  const [user, setUser] = useState<PublicUser | null>(null);
+  const user = useAppSelector((state) => state.user.user);
   const [computers, setComputers] = useState<Computer[]>([]);
   const [requests, setRequests] = useState<BorrowRequest[]>([]);
   const [form, setForm] = useState(emptyComputerForm);
@@ -37,17 +37,10 @@ export default function ComputersPage() {
       setLoading(true);
     }
     try {
-      const [meResponse, computerResponse, requestResponse] = await Promise.all([
-        api.get("/auth/me").catch(() => null),
+      const [computerResponse, requestResponse] = await Promise.all([
         api.get("/computers").catch(() => null),
         api.get("/computer-borrow-requests").catch(() => null),
       ]);
-
-      if (meResponse) {
-        setUser(meResponse.data.user as PublicUser);
-      } else {
-        setUser(null);
-      }
 
       if (computerResponse) {
         setComputers(computerResponse.data.computers ?? []);

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import api, { getErrorMessage } from "@/lib/axios";
 import { supabase } from "@/lib/supabase";
-import type { PublicUser } from "@/types/user";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setUser, updateUser } from "@/store/userSlice";
 
 interface ProfileForm {
   full_name: string;
@@ -25,6 +26,8 @@ const emptyForm: ProfileForm = {
 };
 
 export default function Profile() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user.user);
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -37,23 +40,46 @@ export default function Profile() {
   const [avatarSuccess, setAvatarSuccess] = useState("");
 
   useEffect(() => {
-    api.get("/auth/me").then(({ data }) => {
-      const user = data.user as PublicUser;
-      setUserId(user.id);
-      const currentAvatar = user.avatar_url ?? "";
-      setForm({
-        full_name: user.full_name ?? "",
-        mssv: user.mssv ?? "",
-        class: user.class ?? "",
-        gender: user.gender ?? "",
-        phone: user.phone ?? "",
-        email: user.email ?? "",
-        avatar_url: currentAvatar,
-      });
-      setAvatarPreview(currentAvatar);
-      setLoaded(true);
+    const currentUser = user ?? null;
+
+    if (!currentUser) {
+      api
+        .get("/auth/me")
+        .then(({ data }) => {
+          dispatch(setUser(data.user));
+          const nextUser = data.user;
+          setUserId(nextUser.id);
+          const currentAvatar = nextUser.avatar_url ?? "";
+          setForm({
+            full_name: nextUser.full_name ?? "",
+            mssv: nextUser.mssv ?? "",
+            class: nextUser.class ?? "",
+            gender: nextUser.gender ?? "",
+            phone: nextUser.phone ?? "",
+            email: nextUser.email ?? "",
+            avatar_url: currentAvatar,
+          });
+          setAvatarPreview(currentAvatar);
+          setLoaded(true);
+        })
+        .catch(() => setLoaded(true));
+      return;
+    }
+
+    setUserId(currentUser.id);
+    const currentAvatar = currentUser.avatar_url ?? "";
+    setForm({
+      full_name: currentUser.full_name ?? "",
+      mssv: currentUser.mssv ?? "",
+      class: currentUser.class ?? "",
+      gender: currentUser.gender ?? "",
+      phone: currentUser.phone ?? "",
+      email: currentUser.email ?? "",
+      avatar_url: currentAvatar,
     });
-  }, []);
+    setAvatarPreview(currentAvatar);
+    setLoaded(true);
+  }, [dispatch, user]);
 
   function updateField(field: keyof ProfileForm, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -109,8 +135,9 @@ export default function Profile() {
       const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(storagePath);
       const avatarUrl = publicUrlData.publicUrl;
 
-      await api.put("/auth/profile", { ...form, avatar_url: avatarUrl });
+      const { data } = await api.put("/auth/profile", { ...form, avatar_url: avatarUrl });
 
+      dispatch(updateUser(data.user));
       setForm((prev) => ({ ...prev, avatar_url: avatarUrl }));
       setAvatarPreview(avatarUrl);
       setAvatarFile(null);
@@ -130,7 +157,8 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      await api.put("/auth/profile", form);
+      const { data } = await api.put("/auth/profile", form);
+      dispatch(updateUser(data.user));
       setSuccess("Cập nhật hồ sơ thành công");
     } catch (err) {
       setError(getErrorMessage(err));

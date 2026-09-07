@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { FiGrid, FiMonitor, FiUser } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiBookOpen, FiGrid, FiMonitor, FiUser } from "react-icons/fi";
 
 import type { PublicUser } from "@/types/user";
 
@@ -11,9 +12,16 @@ interface SidebarProps {
 
 export default function Sidebar({ open, user }: SidebarProps) {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const navItems = [
     { label: "Trang chủ", href: "/", icon: FiGrid },
     { label: "Quản lý máy tính", href: "/computers", icon: FiMonitor },
+    { label: "Swagger API", href: "/swagger", icon: FiBookOpen },
     { label: "Hồ sơ", href: "/profile", icon: FiUser },
   ];
 
@@ -29,7 +37,7 @@ export default function Sidebar({ open, user }: SidebarProps) {
         </div>
 
         {navItems.map((item) => {
-          const active = router.pathname === item.href;
+          const active = isMounted && (router.pathname === item.href || router.asPath === item.href);
           const Icon = item.icon;
 
           return (

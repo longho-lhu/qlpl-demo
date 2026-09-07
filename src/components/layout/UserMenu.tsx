@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import api from "@/lib/axios";
+import { useAppDispatch } from "@/store/hooks";
+import { clearUser } from "@/store/userSlice";
 import type { PublicUser } from "@/types/user";
 
 interface UserMenuProps {
@@ -10,6 +12,7 @@ interface UserMenuProps {
 
 export default function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +28,7 @@ export default function UserMenu({ user }: UserMenuProps) {
 
   async function handleLogout() {
     await api.post("/auth/logout");
+    dispatch(clearUser());
     router.push("/auth/login");
   }
 

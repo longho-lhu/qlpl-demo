@@ -3,9 +3,12 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import api, { getErrorMessage } from "@/lib/axios";
 import AuthLayout, { AuthField } from "@/components/AuthLayout";
+import { useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/userSlice";
 
 export default function Login() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,6 +20,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { username, password });
+      dispatch(setUser(data.user));
       if (!data.user.profile_completed) {
         router.push("/auth/complete-profile");
       } else {

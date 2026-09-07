@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import api, { getErrorMessage } from "@/lib/axios";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setUser, updateUser } from "@/store/userSlice";
 
 interface ProfileForm {
   full_name: string;
@@ -22,15 +24,27 @@ const emptyForm: ProfileForm = {
 
 export default function CompleteProfile() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user.user);
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    if (user) {
+      if (user.profile_completed) {
+        router.replace("/");
+        return;
+      }
+      setChecking(false);
+      return;
+    }
+
     api
       .get("/auth/me")
       .then(({ data }) => {
+        dispatch(setUser(data.user));
         if (data.user.profile_completed) {
           router.replace("/");
           return;
@@ -38,7 +52,7 @@ export default function CompleteProfile() {
         setChecking(false);
       })
       .catch(() => router.replace("/auth/login"));
-  }, [router]);
+  }, [dispatch, router, user]);
 
   function updateField(field: keyof ProfileForm, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -49,7 +63,8 @@ export default function CompleteProfile() {
     setError("");
     setLoading(true);
     try {
-      await api.put("/auth/profile", form);
+      const { data } = await api.put("/auth/profile", form);
+      dispatch(updateUser(data.user));
       router.push("/");
     } catch (err) {
       setError(getErrorMessage(err));

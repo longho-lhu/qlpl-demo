@@ -2,18 +2,24 @@ import { useEffect, useState, type ReactNode } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import api from "@/lib/axios";
-import type { PublicUser } from "@/types/user";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { clearUser, setUser, setUserLoading } from "@/store/userSlice";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [user, setUser] = useState<PublicUser | null>(null);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user.user);
 
   useEffect(() => {
+    if (user) return;
+
+    dispatch(setUserLoading(true));
     api
       .get("/auth/me")
-      .then(({ data }) => setUser(data.user))
-      .catch(() => setUser(null));
-  }, []);
+      .then(({ data }) => dispatch(setUser(data.user)))
+      .catch(() => dispatch(clearUser()))
+      .finally(() => dispatch(setUserLoading(false)));
+  }, [dispatch, user]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden px-3 py-3">

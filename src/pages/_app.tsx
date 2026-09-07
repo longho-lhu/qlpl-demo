@@ -1,7 +1,9 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { notification } from "antd";
+import { Provider } from "react-redux";
 import GlobalLoadingBar from "@/components/common/GlobalLoadingBar";
+import { store } from "@/store/store";
 
 notification.config({
   placement: "topRight",
@@ -11,9 +13,11 @@ notification.config({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <>
-      <GlobalLoadingBar />
-      <Component {...pageProps} />
-    </>
+    <Provider store={store}>
+      <>
+        <GlobalLoadingBar />
+        <Component {...pageProps} />
+      </>
+    </Provider>
   );
 }
